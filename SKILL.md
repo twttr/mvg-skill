@@ -12,7 +12,7 @@ Munich public transport departures, schedules, and alerts.
 When user shares location or asks about nearby transport:
 
 ```bash
-cd ~/clawd/scripts/mvg && python3 mvg-departures.py <lat> <lng>
+python3 mvg-departures.py <lat> <lng>
 
 # With options
 python3 mvg-departures.py <lat> <lng> --limit 5 --offset 3 --compact
@@ -31,37 +31,33 @@ python3 mvg-departures.py <lat> <lng> --limit 5 --offset 3 --compact
 ### Examples
 
 ```bash
-# From Roma's home (Bogenhausen)
-python3 mvg-departures.py 48.154 11.620
+# Central Munich
+python3 mvg-departures.py 48.137 11.575
 
 # Only U-Bahn and S-Bahn, 5 min walk to station
-python3 mvg-departures.py 48.154 11.620 --types U,S --offset 5
+python3 mvg-departures.py 48.137 11.575 --types U,S --offset 5
 
 # Compact output
-python3 mvg-departures.py 48.154 11.620 --compact
+python3 mvg-departures.py 48.137 11.575 --compact
 ```
 
 ### Output Format
 
 ```
-📍 **Arabellapark Nord** (München)
+📍 **Marienplatz** (München)
 
-🚇 U4 → Westendstraße (5 min)
-🚌 150 → Bremer Straße (jetzt)
-🚌 183 → Messestadt West (2 min +3)
+🚇 U3 → Fürstenried West (2 min)
+🚇 U6 → Klinikum Großhadern (3 min)
+🚆 S1 → Freising (5 min +2)
 ```
 
 Delay shown as `(+N)` minutes.
 
 ## 2. On Location Share
 
-When Roma sends a location via Telegram, show:
-
-1. **Nearby departures** (use coordinates from message)
-2. **Fuel prices** if driving is relevant
+When user sends a location via Telegram/Signal, automatically show nearby departures:
 
 ```bash
-# Both in one response
 python3 mvg-departures.py <lat> <lng> --limit 6 --compact
 ```
 
@@ -103,16 +99,16 @@ Add to HEARTBEAT.md for automated checks:
 - web_search: "München MVG Streik Störung" freshness=pd
 - Report NEW alerts only (check reportedAlerts in state)
 
-### 📍 On Location (when Roma sends location)
+### 📍 On Location
 - python3 mvg-departures.py <lat> <lng> --limit 6
 ```
 
-Track in `memory/heartbeat-state.json`:
+Track reported alerts in state file:
 
 ```json
 {
   "reportedAlerts": ["mvg-streik-2026-02-02"],
-  "acknowledgedAlerts": ["mvg-streik-2026-02-02"]
+  "acknowledgedAlerts": []
 }
 ```
 
@@ -133,8 +129,6 @@ Python package: `pip install mvg`
 
 ```bash
 pip install mvg
-# or
-npm install  # for TypeScript version
 ```
 
 ## Munich Tips

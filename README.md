@@ -1,45 +1,62 @@
 # MVG Departures 🚇
 
-Отправления мюнхенского транспорта по координатам.
+Get Munich public transport departures by coordinates.
 
-## Использование
+## Usage
 
 ```bash
-# По координатам
-npx ts-node mvg-departures.ts 48.154 11.620
+# By coordinates
+python3 mvg-departures.py 48.137 11.575
 
-# С опциями
-npx ts-node mvg-departures.ts 48.154 11.620 --limit 5 --offset 3 --compact
+# With options
+python3 mvg-departures.py 48.137 11.575 --limit 5 --offset 3 --compact
 
-# JSON вывод (для интеграции)
-npx ts-node mvg-departures.ts 48.154 11.620 --json
+# JSON output (for integration)
+python3 mvg-departures.py 48.137 11.575 --json
 ```
 
-## Опции
+## Options
 
-- `--limit N` — количество отправлений (по умолчанию 8)
-- `--offset MIN` — добавить минуты на дорогу до остановки
-- `--compact` — компактный вывод в одну строку
-- `--json` — JSON вывод
+| Flag | Description |
+|------|-------------|
+| `--limit N` | Number of departures (default: 8) |
+| `--offset MIN` | Walking time to stop in minutes |
+| `--types U,S,BUS,TRAM` | Filter by transport type |
+| `--compact` | One-line output format |
+| `--json` | JSON output |
 
-## Интеграция с Clawdbot
+## Requirements
 
-Когда Roma шлёт локацию в Telegram, Clawdbot может автоматически показать ближайшие отправления.
+```bash
+pip install mvg
+```
+
+## Example Output
+
+```
+📍 **Marienplatz** (München)
+
+🚇 U3 → Fürstenried West (2 min)
+🚇 U6 → Klinikum Großhadern (3 min)
+🚆 S1 → Freising (5 min +2)
+🚌 132 → Schwabing Nord (6 min)
+```
+
+Delays shown as `(+N)` minutes.
 
 ## API
 
-Использует неофициальный MVG API:
+Uses the unofficial MVG API:
 - Base: `https://www.mvg.de/api/bgw-pt/v3`
-- `/stations/nearby?latitude=X&longitude=Y` — ближайшие остановки
-- `/departures?globalId=X&limit=N` — отправления
+- `/stations/nearby?latitude=X&longitude=Y` — nearby stops
+- `/departures?globalId=X&limit=N` — departures
 
-## Пример вывода
+## TypeScript Version
 
+```bash
+npx ts-node mvg-departures.ts 48.137 11.575
 ```
-📍 **Arabellapark Nord** (München)
 
-🚌 150 → Bremer Straße (jetzt)
-🚌 183 → Messestadt West (2 min)
-🚌 154 → Nordbad (3 min)
-🚇 U4 → Westendstraße (5 min)
-```
+## License
+
+MIT
