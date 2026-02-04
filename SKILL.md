@@ -1,85 +1,113 @@
 ---
-name: mvg-alerts
-description: Check Munich public transport (MVG) for disruptions, strikes, and service alerts. Use when user asks about Munich transport status, MVG problems, S-Bahn/U-Bahn delays, or needs commute planning in Munich.
+name: mvg
+description: Munich public transport (MVG) - departures, schedules, and alerts. Use when user shares location in Munich, asks about transport schedules, nearby stops, or transit disruptions.
 ---
 
-# MVG Alerts
+# MVG Skill 🚇
 
-Check Munich public transport (MVG/MVV) for disruptions, strikes, and delays.
+Munich public transport departures, schedules, and alerts.
 
-## Quick Check
+## 1. Departures by Location
 
-Search for current alerts:
+When user shares location or asks about nearby transport:
+
+```bash
+cd ~/clawd/scripts/mvg && python3 mvg-departures.py <lat> <lng>
+
+# With options
+python3 mvg-departures.py <lat> <lng> --limit 5 --offset 3 --compact
+```
+
+### Options
+
+| Flag | Description |
+|------|-------------|
+| `--limit N` | Max departures (default: 8) |
+| `--offset MIN` | Walking time to stop (filters out departures leaving too soon) |
+| `--types U,S,BUS,TRAM` | Filter by transport type |
+| `--compact` | One-line format |
+| `--json` | JSON output |
+
+### Examples
+
+```bash
+# From Roma's home (Bogenhausen)
+python3 mvg-departures.py 48.154 11.620
+
+# Only U-Bahn and S-Bahn, 5 min walk to station
+python3 mvg-departures.py 48.154 11.620 --types U,S --offset 5
+
+# Compact output
+python3 mvg-departures.py 48.154 11.620 --compact
+```
+
+### Output Format
+
+```
+📍 **Arabellapark Nord** (München)
+
+🚇 U4 → Westendstraße (5 min)
+🚌 150 → Bremer Straße (jetzt)
+🚌 183 → Messestadt West (2 min +3)
+```
+
+Delay shown as `(+N)` minutes.
+
+## 2. On Location Share
+
+When Roma sends a location via Telegram, show:
+
+1. **Nearby departures** (use coordinates from message)
+2. **Fuel prices** if driving is relevant
+
+```bash
+# Both in one response
+python3 mvg-departures.py <lat> <lng> --limit 6 --compact
+```
+
+## 3. Alerts & Disruptions
+
+Check for strikes, disruptions, construction:
 
 ```bash
 web_search "München MVG Streik Störung" --freshness pd
 ```
 
-Keywords to search: `Streik` (strike), `Störung` (disruption), `Sperrung` (closure), `Ausfall` (cancellation), `Verspätung` (delay)
+### Keywords
 
-## What MVG Covers
+- `Streik` — strike
+- `Störung` — disruption  
+- `Sperrung` — closure
+- `Ausfall` — cancellation
+- `Verspätung` — delay
+- `Bauarbeiten` — construction
 
-- **U-Bahn** (subway) — Lines U1-U8
-- **Tram** (streetcar) — Multiple lines
-- **Bus** — Lines up to 199 (MVG operated)
+### MVG vs S-Bahn
 
-## What MVG Does NOT Cover
+| Service | Operator | During MVG Strike |
+|---------|----------|-------------------|
+| U-Bahn | MVG | ❌ Affected |
+| Tram | MVG | ❌ Affected |
+| Bus (1-199) | MVG | ❌ Affected |
+| **S-Bahn** | **DB** | ✅ Usually runs |
+| Regional trains | DB | ✅ Usually runs |
 
-- **S-Bahn** — Operated by Deutsche Bahn, separate system
-- **Regional buses** — DB operated
-- **Regional trains** — DB operated
+⚠️ S-Bahn is operated by Deutsche Bahn, not MVG!
 
-⚠️ During MVG strikes, S-Bahn usually still runs!
+## 4. Heartbeat Integration
 
-## Common Alert Types
-
-### Strikes (Streik)
-- Usually announced 1-3 days ahead
-- Check: `web_search "MVG Streik" --freshness pw`
-- Often affects all MVG services (U-Bahn, Tram, Bus)
-
-### Service Disruptions (Störung)
-- Can happen anytime
-- Check: `web_search "MVG Störung aktuell"`
-- Often single lines or stations
-
-### Construction (Bauarbeiten)
-- Planned closures
-- Check MVG website or `web_search "MVG Bauarbeiten [LINE]"`
-
-## Sources
-
-- **Official**: mvg.de/betriebsaenderungen
-- **News**: Süddeutsche Zeitung, Münchner Merkur, BR24, Abendzeitung
-- **Twitter/X**: @MVGticker
-
-## Response Format
-
-When reporting alerts:
-
-```
-🚨 MVG Alert: [Type]
-
-Affected: [Lines/Services]
-When: [Date/Time]
-Impact: [What's not running]
-Alternative: [S-Bahn, bike, etc.]
-
-Source: [URL]
-```
-
-## Integration with Heartbeat
-
-Add to your HEARTBEAT.md:
+Add to HEARTBEAT.md for automated checks:
 
 ```markdown
-### 🚨 MVG Alerts
+### 🚨 MVG Alerts (every heartbeat)
 - web_search: "München MVG Streik Störung" freshness=pd
-- Report NEW alerts only (track in state file)
-- Keywords: Streik, Störung, Unwetter, Sperrung, Ausfall
+- Report NEW alerts only (check reportedAlerts in state)
+
+### 📍 On Location (when Roma sends location)
+- python3 mvg-departures.py <lat> <lng> --limit 6
 ```
 
-Track reported alerts in `memory/heartbeat-state.json`:
+Track in `memory/heartbeat-state.json`:
 
 ```json
 {
@@ -88,9 +116,30 @@ Track reported alerts in `memory/heartbeat-state.json`:
 }
 ```
 
-## Munich-specific Tips
+## 5. API Reference
 
-- Morning rush: 7:00-9:00
-- Evening rush: 16:30-19:00
-- Oktoberfest (late Sept): Expect crowded U4/U5
-- Football matches (Allianz Arena): U6 packed on game days
+Uses unofficial MVG API:
+
+```
+Base: https://www.mvg.de/api/bgw-pt/v3
+
+GET /stations/nearby?latitude=X&longitude=Y
+GET /departures?globalId=STATION_ID&limit=N&offsetInMinutes=M
+```
+
+Python package: `pip install mvg`
+
+## Requirements
+
+```bash
+pip install mvg
+# or
+npm install  # for TypeScript version
+```
+
+## Munich Tips
+
+- **Rush hours**: 7:00-9:00, 16:30-19:00
+- **Oktoberfest**: U4/U5 crowded (late Sept)
+- **Allianz Arena**: U6 packed on match days
+- **Night service**: Limited after 00:30 (weekdays)
